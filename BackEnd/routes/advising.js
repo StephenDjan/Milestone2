@@ -5,10 +5,11 @@ const router = express.Router();
 
 // Fetch advising history for a student
 router.get('/history', (req, res) => {
-  const studentId = req.query.studentId; // Assume student ID is passed as a query param
+  const email = req.query.email; // Assume student ID is passed as a query param
 
-  const query = `SELECT date, term, status FROM AdvisingRecords WHERE student_id = ? ORDER BY date DESC`;
-  db.query(query, [studentId], (err, result) => {
+  console.log(email)
+  const query = `SELECT lastTerm, status, date FROM AdvisingRecords WHERE email = ? ORDER BY date DESC`;
+  db.query(query, [email], (err, result) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ message: 'Internal server error' });

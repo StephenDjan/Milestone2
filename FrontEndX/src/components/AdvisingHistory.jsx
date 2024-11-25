@@ -8,18 +8,15 @@ const AdvisingHistory = () => {
     const [advisingRecords, setAdvisingRecords] = useState([]);
     const [error, setError] = useState(null);
 
-    console.log(userInfo)
-
     useEffect(() => {
         const fetchAdvisingHistory = async () => {
             try {
-                const response = await axios.get(`http://localhost:5000/api/advising/advising-history`, {
-                    params: { id: userInfo?.id }
+                const response = await axios.get(`/api/advising/history`, {
+                    params: { email: userInfo?.email }
                 });
 
                 // Assuming the response data has the expected records format
                 const records = response.data.records || [];
-                console.log("This is records",records)
                 setAdvisingRecords(records);
             } catch (error) {
                 console.error('Error fetching advising history:', error);
@@ -31,7 +28,6 @@ const AdvisingHistory = () => {
             fetchAdvisingHistory();
         }
     }, [userInfo]);
-    
 
     return (
         <div className="advising-history-container">
@@ -50,7 +46,7 @@ const AdvisingHistory = () => {
                         {advisingRecords.map((record, index) => (
                             <tr key={index}>
                                 <td>{new Date(record.date).toLocaleDateString()}</td>
-                                <td>{record.lastTerm}</td>
+                                <td>{record.term}</td>
                                 <td>{record.status}</td>
                             </tr>
                         ))}

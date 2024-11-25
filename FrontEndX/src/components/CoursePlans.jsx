@@ -10,7 +10,7 @@ const CoursePlans = ({ advisingId }) => {
     useEffect(() => {
         const fetchCoursePlans = async () => {
             try {
-                const response = await axios.get(`http://localhost:5000/api/courses`, {
+                const response = await axios.get(`https://localhost/api/courses`, {
                     // params: { advisingId }
                 });
                 setCoursePlans(response.data.courses);

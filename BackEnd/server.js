@@ -45,6 +45,9 @@ app.use('/api/advising', advisingRoutes);
 //adminRoutes endpoint
 app.use('/admin', adminRoutes);
 
+app.use('/api/admin', adminRoutes);
+
+
 // Registration endpoint
 app.post('/api/register', async (req, res) => {
   const { username, email, password, phone, city } = req.body;

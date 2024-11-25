@@ -1,7 +1,11 @@
-/* Wrapper for centering and width restriction */
-.login-container,
+/* Force container centering with strict max-width */
 .registration-container {
-    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 500px;
     margin: 0 auto;
     padding: 20px;
     background-color: #f9f9f9;
@@ -9,7 +13,7 @@
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* General form styling */
+/* Form styling */
 form {
     width: 100%;
     display: flex;
@@ -18,10 +22,11 @@ form {
 }
 
 /* Input fields styling */
-input[type="email"],
-input[type="password"],
-input[type="text"],
-input[type="phone"] {
+.registration-container input[type="text"],
+.registration-container input[type="email"],
+.registration-container input[type="password"],
+.registration-container input[type="phone"] {
+    max-width: 100%;
     width: 100%;
     padding: 10px;
     margin-bottom: 10px;
@@ -30,30 +35,30 @@ input[type="phone"] {
     box-sizing: border-box;
 }
 
+/* Focus state */
+input:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
 /* Button styling */
-button {
+.registration-container button {
+    width: 100%;
     padding: 10px 15px;
     background-color: #007bff;
-    color: white;
+    color: #fff;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    margin-top: 20px;
+    transition: background-color 0.3s ease;
 }
 
 button:hover {
     background-color: #0056b3;
 }
 
-/* Error message styling */
-.error-message {
-    color: red;
-    margin-top: 10px;
-}
-
 /* Responsive adjustments */
 @media (max-width: 600px) {
-    .login-container,
     .registration-container {
         max-width: 100%;
         padding: 15px;

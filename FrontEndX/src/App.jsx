@@ -9,7 +9,6 @@ import PasswordReset from './components/PasswordReset';
 import VerifyOTP from './components/Verify-otp';
 import AdminPage from './components/AdminPage'; 
 import AdminLogin from './components/AdminLogin';
-import AdminEntries from './components/AdminEntries';
 import Advising from './components/AdvisingHistory'; // Import the new Advising page
 import AdvisingHistory from './components/AdvisingHistory';  // Import the AdvisingHistory component
 import CoursePlans from './components/CoursePlans';          // Import the CoursePlans component
@@ -40,7 +39,6 @@ function App() {
                 <Route path="/advising-entry" element={<AdvisingEntry />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/prerequisites" element={<PrerequisiteForm />} />
-                <Route path="/admin/pending-entries" element={<AdminEntries />} />
             </Routes>
         </BrowserRouter>
       </UserContextProvider>

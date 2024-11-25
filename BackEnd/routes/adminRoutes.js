@@ -30,13 +30,14 @@ router.get('/dashboard-data', async (req, res) => {
   }
 });
 
-// New endpoint for fetching courses
+// Endpoint for fetching courses
 router.get('/courses', async (req, res) => {
   try {
-    const [courses] = await db.query(`SELECT * FROM courses 
-        WHERE courseLevel BETWEEN 100 AND 499 
-        AND isPrerequisite = true;`
-        );
+    const [courses] = await db.query(`
+      SELECT * FROM courses 
+      WHERE courseLevel BETWEEN 100 AND 499 
+      AND isPrerequisite = true
+    `);
     res.json(courses);
   } catch (error) {
     console.error('Error fetching courses:', error);
@@ -44,36 +45,46 @@ router.get('/courses', async (req, res) => {
   }
 });
 
-router.post('/update-courses', (req, res) => {
-    const enabledCourses = req.body.courses;
-    
-    // Check if the enabledCourses array is valid
-    if (!Array.isArray(enabledCourses) || enabledCourses.length === 0) {
-      return res.status(400).send('No courses provided');
-    }
-  
-    // Prepare the query for bulk insert
-    const values = enabledCourses.map(course => [
-      course.courseId, 
-      course.courseLevel, 
-      course.courseCode, 
-      course.courseName
-    ]);
-  
-    // Bulk insert query
+// Endpoint to update courses
+router.post('/update-courses', async (req, res) => {
+  const enabledCourses = req.body.courses;
+
+  if (!Array.isArray(enabledCourses) || enabledCourses.length === 0) {
+    return res.status(400).send('No courses provided');
+  }
+
+  const values = enabledCourses.map(course => [
+    course.courseId, 
+    course.courseLevel, 
+    course.courseCode, 
+    course.courseName
+  ]);
+
+  try {
     const query = `
       INSERT INTO prereqs (courseId, courseLevel, courseCode, courseName)
-      VALUES ?`;
-  
-    // Execute the query to insert the enabled courses
-    db.query(query, [values], (err, result) => {
-      if (err) {
-        console.error('Error inserting/updating courses:', err);
-        return res.status(500).send('Failed to update courses');
-      }
-      res.status(200).send('Courses updated successfully');
-    });
-  });
-  
-  
+      VALUES ?
+    `;
+    await db.query(query, [values]);
+    res.status(200).send('Courses updated successfully');
+  } catch (error) {
+    console.error('Error inserting/updating courses:', error);
+    res.status(500).send('Failed to update courses');
+  }
+});
+
+// **New Endpoint**: Fetch Pending Advising Entries
+router.get('/pending-entries', async (req, res) => {
+  try {
+    const [entries] = await db.query(`
+      SELECT advisingId, userId, lastTerm, lastGPA, currentTerm, status, rejectionReason, studentName, date
+      FROM AdvisingRecords
+    `);
+    res.json({ success: true, entries });
+  } catch (error) {
+    console.error('Error fetching pending entries:', error);
+    res.status(500).json({ success: false, message: 'Error fetching pending entries.' });
+  }
+});
+
 export default router;

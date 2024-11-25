@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { UserContext } from './providers/UserContext';
-import { useNavigate } from "react-router-dom";
 
 const ProfileSettings = () => {
     const { userInfo, setUserInfo } = useContext(UserContext);
@@ -15,7 +14,6 @@ const ProfileSettings = () => {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const navigate = useNavigate();
 
     useEffect(() => {
         if (userInfo) {
@@ -27,7 +25,7 @@ const ProfileSettings = () => {
                 password: "",
                 confirmPassword: ""
             });
-            setIsLoading(false); // Done loading after userInfo is set
+            setIsLoading(false);  // Done loading after userInfo is set
         }
     }, [userInfo]);
 
@@ -55,7 +53,7 @@ const ProfileSettings = () => {
             if (response.data.success) {
                 setUserInfo(response.data.user); // Update context with the new user info
                 alert("Profile updated successfully");
-                navigate("/profile"); // Redirect to Profile page
+                navigate("/Profile");
             } else {
                 alert("Update failed");
             }

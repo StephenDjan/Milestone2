@@ -20,61 +20,43 @@ db.connect((err) => {
 });
 
 // Endpoint to create advising entry
-router.post('/entry', (req, res) => {
-  const { lastTerm, lastGPA, currentTerm, prerequisites, coursePlan } = req.body;
+router.post('/entry', async (req, res) => {
+  const { lastTerm, lastGPA, currentTerm, prerequisites, coursePlan, userId, studentName, date } = req.body;
 
   // Validate data
-  if (!lastTerm || !lastGPA || !currentTerm) {
-    return res.status(400).json({ message: 'Please fill in all required fields.' });
+  if (!userId || !lastTerm || !lastGPA || !currentTerm || !studentName || !date) {
+      return res.status(400).json({ success: false, message: 'All fields are required.' });
   }
 
-  // Insert entry into the AdvisingRecords table
-  const advisingEntryQuery = `
-    INSERT INTO AdvisingRecords (lastTerm, lastGPA, currentTerm) 
-    VALUES (?, ?, ?)
-  `;
-  db.query(advisingEntryQuery, [lastTerm, lastGPA, currentTerm], (err, result) => {
-    if (err) {
-      console.error('Database error:', err);
-      return res.status(500).json({ message: 'Database error.' });
-    }
+  try {
+      // Insert main advising entry
+      const [result] = await db.promise().query(
+          'INSERT INTO AdvisingRecords (userId, lastTerm, lastGPA, currentTerm, status, rejectionReason, studentName, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          [userId, lastTerm, lastGPA, currentTerm, 'pending', '', studentName, date]
+      );
+      const advisingId = result.insertId;
 
-    // Insert prerequisites and course plans if needed
-    const advisingId = result.insertId;
-
-    if (prerequisites && prerequisites.length > 0) {
-      const prerequisitesQuery = `
-        INSERT INTO Prerequisites (advisingId, course) VALUES (?, ?)
-      `;
-      prerequisites.forEach((pre) => {
-        db.query(prerequisitesQuery, [advisingId, pre.course]);
-      });
-    }
-
-    if (coursePlan && coursePlan.length > 0) {
-      const coursePlanQuery = `
-        INSERT INTO CoursePlans (advisingId, course) VALUES (?, ?)
-      `;
-      coursePlan.forEach((course) => {
-        db.query(coursePlanQuery, [advisingId, course.course]);
-      });
-    }
-
-    res.status(201).json({ success: true, message: 'Advising entry created successfully.' });
-  });
+     
+      
+      res.status(201).json({ success: true, message: 'Advising entry created successfully.' });
+  } catch (error) {
+      console.error('Database error:', error);
+      res.status(500).json({ success: false, message: error });
+  }
 });
+
 
 // Endpoint to fetch advising history for a student
 router.get('/advising-history', (req, res) => {
-  const { email } = req.query;
+  const { id } = req.query;
 
   const query = `
-    SELECT term, course, status
+    SELECT lastTerm, status, date
     FROM AdvisingRecords
-    WHERE studentEmail = ?
-    ORDER BY term DESC
+    WHERE userId = ?
+    ORDER BY date DESC
   `;
-  db.query(query, [email], (error, results) => {
+  db.query(query, [id], (error, results) => {
     if (error) {
       console.error('Database error:', error);
       return res.status(500).json({ message: 'Error fetching history' });
@@ -97,7 +79,7 @@ router.get('/courses', (req, res) => {
 });
 
 // Endpoint to fetch all courses
-router.get('/courses', (req, res) => {
+router.get('/get_courses', (req, res) => {
   const query = 'SELECT courseId, courseName, courseCode FROM Courses';
   db.query(query, (error, results) => {
     if (error) {

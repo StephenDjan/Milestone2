@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './advisingEntry.css';
-import { useUserContext } from './providers/UserContext';
 
 const AdvisingEntry = () => {
     const [lastTerm, setLastTerm] = useState('');
@@ -12,39 +11,23 @@ const AdvisingEntry = () => {
     const [courses, setCourses] = useState([]);
     const [errorMessage, setErrorMessage] = useState('');
     const [loading, setLoading] = useState(false);
-    const { userInfo } = useUserContext();
 
-    // Fetch courses from the API
+    // Fetch available courses from the database
     useEffect(() => {
-        const loadData = async () => {
+        const fetchCourses = async () => {
             setLoading(true);
             try {
-                const response = await axios.get('http://localhost:5000/api/advising/get_courses');
-                if (response.data && Array.isArray(response.data)) {
-                    setCourses(response.data); // Directly set courses from the response data
-                } else {
-                    setErrorMessage('Failed to load courses.');
-                }
+                const response = await axios.get('/api/courses');
+                setCourses(response.data);
             } catch (error) {
-                setErrorMessage('Error fetching data.');
+                setErrorMessage('Error fetching courses.');
             } finally {
                 setLoading(false);
             }
         };
-        loadData();
+        fetchCourses();
     }, []);
 
-    // Helper function to filter courses by level
-    const filterCoursesByLevel = (level) => {
-        const minLevel = parseInt(level, 10);
-        const maxLevel = minLevel + 99;
-        return courses.filter(course => {
-            const courseLevel = parseInt(course.courseCode.match(/\d+/)[0], 10);
-            return courseLevel >= minLevel && courseLevel <= maxLevel;
-        });
-    };
-
-    // Handlers for adding prerequisites and course plans
     const handleAddPrerequisite = () => {
         setPrerequisites([...prerequisites, { course: '', level: '', id: Date.now() }]);
     };
@@ -53,37 +36,16 @@ const AdvisingEntry = () => {
         setCoursePlan([...coursePlan, { course: '', level: '', id: Date.now() }]);
     };
 
-    // Handlers for removing a specific prerequisite or course plan row
-    const handleRemovePrerequisite = (id) => {
-        setPrerequisites(prerequisites.filter(pre => pre.id !== id));
-    };
-
-    const handleRemoveCoursePlan = (id) => {
-        setCoursePlan(coursePlan.filter(course => course.id !== id));
-    };
-
-
-    // Handle form submission
     const handleSubmit = async () => {
         setLoading(true);
         try {
-            const today = new Date();
-            const formattedDate = today.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-            });
-            const response = await axios.post('http://localhost:5000/api/advising/entry', {
+            const response = await axios.post('/api/advising/entry', {
                 lastTerm,
                 lastGPA,
                 currentTerm,
                 prerequisites,
-                coursePlan,
-                userId: userInfo.id,
-                studentName: userInfo.username,
-                date: today
+                coursePlan
             });
-            
             if (response.data.success) {
                 alert('Advising entry submitted successfully!');
                 setPrerequisites([]);
@@ -102,7 +64,7 @@ const AdvisingEntry = () => {
         <div className="advising-entry-container">
             <h2>Create Advising Entry</h2>
 
-            {/* Last Term, Last GPA, and Current Term inputs */}
+            {/* Last Term, Last GPA, and Current Term in the same row */}
             <div className="form-group row">
                 <div className="form-item">
                     <label>Last Term</label>
@@ -163,14 +125,13 @@ const AdvisingEntry = () => {
                             }}
                         >
                             <option value="">Select a prerequisite</option>
-                            {filterCoursesByLevel(pre.level).map((course) => (
+                            {Array.isArray(courses) && courses.map((course) => (
                                 <option key={course.courseId} value={course.courseId}>
                                     {course.courseName} ({course.courseCode})
                                 </option>
                             ))}
                         </select>
                     </div>
-                    <button onClick={() => handleRemovePrerequisite(pre.id)} className="btn remove-btn">Remove</button>
                 </div>
             ))}
             <button className="btn add-btn" onClick={handleAddPrerequisite} disabled={loading}>
@@ -207,14 +168,13 @@ const AdvisingEntry = () => {
                             }}
                         >
                             <option value="">Select a course</option>
-                            {filterCoursesByLevel(course.level).map((course) => (
+                            {Array.isArray(courses) && courses.map((course) => (
                                 <option key={course.courseId} value={course.courseId}>
                                     {course.courseName} ({course.courseCode})
                                 </option>
                             ))}
                         </select>
                     </div>
-                    <button onClick={() => handleRemoveCoursePlan(course.id)} className="btn remove-btn">Remove</button>
                 </div>
             ))}
             <button className="btn add-btn" onClick={handleAddCoursePlan} disabled={loading}>
