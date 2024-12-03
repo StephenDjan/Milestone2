@@ -36,7 +36,7 @@ const StudentDetails = () => {
             });
             if (response.data.success) {
                 alert('Status updated successfully!');
-                navigate('/admin/entries');
+                navigate('/admin/pending-entries');
             } else {
                 alert(response.data.message || 'Failed to update status.');
             }
