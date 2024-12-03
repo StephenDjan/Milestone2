@@ -17,6 +17,7 @@ import Navbar from './components/Navbar';
 import AdvisingEntry from './components/AdvisingEntry';
 import AdminDashboard from './components/AdminDashboard';
 import PrerequisiteForm from './components/PrerequisiteForm';
+import StudentDetails from './components/StudentDetails';
 import { UserContextProvider } from './components/providers/UserContext';
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
                 <Route path="/advising-entry" element={<AdvisingEntry />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/prerequisites" element={<PrerequisiteForm />} />
+                <Route path="/admin/student/:id" element={<StudentDetails />} />
                 <Route path="/admin/pending-entries" element={<AdminEntries />} />
             </Routes>
         </BrowserRouter>

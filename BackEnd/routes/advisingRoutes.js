@@ -22,6 +22,17 @@ db.connect((err) => {
 // Endpoint to create advising entry
 router.post('/entry', async (req, res) => {
   const { lastTerm, lastGPA, currentTerm, prerequisites, coursePlan, userId, studentName, date } = req.body;
+  console.log("prerequisites")
+  console.log(prerequisites)
+  console.log("coursePlan")
+  console.log(coursePlan)
+
+  const coursePlanString = coursePlan.map(item => item.course).join(' ');
+  const preReqPlanString = prerequisites.map(item => item.course).join(' ');
+  console.log("coursePlanString")
+  console.log(coursePlanString)
+  console.log("preReqPlanString")
+  console.log(preReqPlanString)
 
   // Validate data
   if (!userId || !lastTerm || !lastGPA || !currentTerm || !studentName || !date) {
@@ -31,8 +42,8 @@ router.post('/entry', async (req, res) => {
   try {
       // Insert main advising entry
       const [result] = await db.promise().query(
-          'INSERT INTO AdvisingRecords (userId, lastTerm, lastGPA, currentTerm, status, rejectionReason, studentName, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          [userId, lastTerm, lastGPA, currentTerm, 'pending', '', studentName, date]
+          'INSERT INTO AdvisingRecords (userId, lastTerm, lastGPA, currentTerm, status, rejectionReason, studentName, date, courseplan, prereqplan) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [userId, lastTerm, lastGPA, currentTerm, 'pending', '', studentName, date, coursePlanString, preReqPlanString]
       );
       const advisingId = result.insertId;
 

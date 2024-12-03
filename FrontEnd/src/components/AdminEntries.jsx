@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import './AdminEntries.css';
 
@@ -6,6 +7,7 @@ const AdminEntries = () => {
     const [entries, setEntries] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchEntries = async () => {
@@ -33,6 +35,12 @@ const AdminEntries = () => {
         fetchEntries();
     }, []);
 
+    // const handleRowClick = (studentId) => {
+        const handleRowClick = (advisingId) => {
+        // navigate(`/admin/student/${studentId}`);
+        navigate(`/admin/student/${advisingId}`);
+    };
+
     if (loading) return <p>Loading...</p>;
     if (error) return <p>{error}</p>;
 
@@ -52,12 +60,13 @@ const AdminEntries = () => {
                 <tbody>
                     {entries.length > 0 ? (
                         entries.map((entry) => (
-                            <tr key={entry.advisingId}>
-                                <td>{entry.studentName }</td>
-                                <td>{entry.userId }</td>
-                                <td>{entry.status }</td>
-                                <td>{new Date(entry.date).toLocaleDateString("en-US", {month: "2-digit", day: "2-digit", year: "numeric"})}</td>
-                            </tr>
+                            // <tr key={entry.advisingId} onClick={() => handleRowClick(entry.userId)} style={{ cursor: 'pointer' }}>
+                            <tr key={entry.advisingId} onClick={() => handleRowClick(entry.advisingId)} style={{ cursor: 'pointer' }}>
+    <td>{entry.studentName}</td>
+    <td>{entry.userId}</td>
+    <td>{entry.status}</td>
+    <td>{new Date(entry.date).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })}</td>
+</tr>
                         ))
                     ) : (
                         <tr>

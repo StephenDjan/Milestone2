@@ -1,6 +1,7 @@
 import express from 'express';
 import mysql from 'mysql2/promise';
 import 'dotenv/config';
+import { SendMail } from '../SendMail.js'; // Ensure the correct import path for SendMail
 
 const router = express.Router();
 
@@ -16,7 +17,7 @@ const db = mysql.createPool({
 router.get('/dashboard-data', async (req, res) => {
   try {
     const [totalStudents] = await db.query('SELECT COUNT(*) AS total FROM users WHERE role = "student"');
-    const [pendingEntries] = await db.query('SELECT COUNT(*) AS total FROM advising_entries WHERE status = "pending"');
+    const [pendingEntries] = await db.query('SELECT COUNT(*) AS total FROM AdvisingRecords WHERE status = "pending"');
     const [totalCourses] = await db.query('SELECT COUNT(*) AS total FROM courses');
 
     res.json({
@@ -73,7 +74,7 @@ router.post('/update-courses', async (req, res) => {
   }
 });
 
-// **New Endpoint**: Fetch Pending Advising Entries
+// Fetch Pending Advising Entries
 router.get('/pending-entries', async (req, res) => {
   try {
     const [entries] = await db.query(`
@@ -84,6 +85,96 @@ router.get('/pending-entries', async (req, res) => {
   } catch (error) {
     console.error('Error fetching pending entries:', error);
     res.status(500).json({ success: false, message: 'Error fetching pending entries.' });
+  }
+});
+
+// API for Fetching Specific Student Record by Advising ID with prerequisites and courses
+router.get('/student/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Fetch student record
+    const [student] = await db.query(`
+      SELECT * 
+      FROM AdvisingRecords 
+      WHERE advisingID = ?`, [id]);
+
+    if (!student.length) {
+      return res.status(404).json({ success: false, message: 'Student record not found' });
+    }
+
+    const studentData = student[0];
+
+    // Split prereqPlan and coursePlan into arrays
+    const prereqIds = studentData.prereqplan?.split(' ') || [];
+    const courseIds = studentData.courseplan?.split(' ') || [];
+
+    // Fetch prerequisites and courses from Courses table
+    const [prerequisites] = prereqIds.length > 0
+      ? await db.query(`
+          SELECT courseId, courseName, courseLevel 
+          FROM Courses 
+          WHERE courseId IN (?)`, [prereqIds])
+      : [[]]; // Empty array if no prereqIds
+
+    const [courses] = courseIds.length > 0
+      ? await db.query(`
+          SELECT courseId, courseName, courseLevel 
+          FROM Courses 
+          WHERE courseId IN (?)`, [courseIds])
+      : [[]]; // Empty array if no courseIds
+
+    // Add fetched details to student data
+    studentData.prerequisites = prerequisites;
+    studentData.courses = courses;
+
+    return res.status(200).json({ success: true, student: studentData });
+  } catch (error) {
+    console.error('Error fetching student details:', error);
+    return res.status(500).json({ success: false, message: 'Failed to fetch student record' });
+  }
+});
+
+// Approve/Reject Record with Email Notification
+router.post('/student/:id/approval', async (req, res) => {
+  const { id } = req.params; // advisingId
+  const { status, comment } = req.body;
+
+  if (!['approved', 'rejected'].includes(status)) {
+    return res.status(400).json({ success: false, message: 'Invalid status' });
+  }
+
+  try {
+    // Update the advising record
+    const [result] = await db.query(`
+      UPDATE AdvisingRecords 
+      SET status = ?, rejectionReason = ? 
+      WHERE advisingId = ?`, [status, comment, id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Record not found' });
+    }
+
+    // Fetch userId associated with the advising record
+    const [advisingRecord] = await db.query(`SELECT userId FROM AdvisingRecords WHERE advisingId = ?`, [id]);
+    if (!advisingRecord.length) {
+      return res.status(404).json({ success: false, message: 'Advising record not found.' });
+    }
+    const userId = advisingRecord[0].userId;
+
+    // Fetch the user's email
+    const [student] = await db.query(`SELECT email FROM Users WHERE id = ?`, [userId]);
+    if (student.length) {
+      const email = student[0].email;
+      const emailSubject = `Your Advising Record Has Been ${status.toUpperCase()}`;
+      const emailBody = comment || `Your advising record has been ${status}.`;
+      SendMail(email, emailSubject, emailBody);
+    }
+
+    res.status(200).json({ success: true, message: 'Record updated successfully' });
+  } catch (error) {
+    console.error('Error updating student record:', error);
+    res.status(500).json({ success: false, message: 'Failed to update student record' });
   }
 });
 

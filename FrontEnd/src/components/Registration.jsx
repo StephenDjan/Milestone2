@@ -1,8 +1,7 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { UserContext } from './providers/UserContext';
-import './registration.css';
+import "./registration.css";
 
 const Registration = () => {
   const [username, setUsername] = useState("");
@@ -12,10 +11,26 @@ const Registration = () => {
   const [city, setCity] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [passwordError, setPasswordError] = useState(""); // For password-specific error
   const navigate = useNavigate();
+
+  // Function to validate the password
+  const validatePassword = (password) => {
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return regex.test(password);
+  };
 
   const handleRegistration = async (e) => {
     e.preventDefault();
+
+    // Validate password before proceeding
+    if (!validatePassword(password)) {
+      setPasswordError(
+        "Password must be at least 8 characters long and include an uppercase letter, lowercase letter, number, and special character."
+      );
+      return;
+    }
+
     try {
       const response = await axios.post("http://localhost:5000/api/register", {
         username,
@@ -27,10 +42,11 @@ const Registration = () => {
 
       console.log("Registration Success:", response.data.message);
       alert(response.data.message);
-      
+
       // Navigate to the verify OTP page with email
       navigate("/verify-otp", { state: { email } });
       setError(""); // Clear any previous error
+      setPasswordError(""); // Clear password error
     } catch (error) {
       console.error("Registration error:", error);
       setError(error.response?.data?.message || "An error occurred");
@@ -63,6 +79,7 @@ const Registration = () => {
           placeholder="Password"
           required
         />
+        {passwordError && <p style={{ color: "red" }}>{passwordError}</p>}
         <input
           type="text"
           value={phone}
@@ -77,8 +94,8 @@ const Registration = () => {
           placeholder="City"
           required
         />
-        {message && <p style={{ color: 'green' }}>{message}</p>}
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {message && <p style={{ color: "green" }}>{message}</p>}
+        {error && <p style={{ color: "red" }}>{error}</p>}
         <button type="submit">Register</button>
       </form>
     </div>
